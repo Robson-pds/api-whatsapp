@@ -7,4 +7,4 @@ const readMessagesSchema = z.array(
   }),
 )
 
-module.exports = {readMessagesSchema}
+module.exports = { readMessagesSchema }

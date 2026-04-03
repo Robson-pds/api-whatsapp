@@ -1,4 +1,4 @@
-const NodeCache = require( "node-cache");
+const NodeCache = require('node-cache')
 const {
   default: makeWASocket,
   DisconnectReason,
@@ -7,7 +7,7 @@ const {
   useMultiFileAuthState,
   isJidBroadcast,
   isJidNewsletter,
-  isJidGroup
+  isJidGroup,
 } = require('baileys')
 const P = require('pino')
 const { format } = require('date-fns')
@@ -24,7 +24,7 @@ const loggerBaileys = P({
 
 const store = {
   messages: new NodeCache({ stdTTL: 20, checkperiod: 30 }),
-};
+}
 
 const sessions = []
 const retriesQrCodeMap = new Map()
@@ -131,7 +131,8 @@ const initBaileysSocket = async (phone) => {
         // Evitar a msg de "Time Out", para não reiniciar o backend
         defaultQueryTimeoutMs: 0,
         // Ignora as mensagens de status do contato ou newsletter ou grupos
-        shouldIgnoreJid: jid => isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
+        shouldIgnoreJid: (jid) =>
+          isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
         auth: {
           creds: state.creds,
           keys: makeCacheableSignalKeyStore(
@@ -146,12 +147,12 @@ const initBaileysSocket = async (phone) => {
         version,
         syncFullHistory: true,
         getMessage: async (key) => {
-          logger.info(`Buscando mensagem no cache ${key.id}`);
-          const msg = store.messages.get(key.id);
+          logger.info(`Buscando mensagem no cache ${key.id}`)
+          const msg = store.messages.get(key.id)
 
-          if (!msg) logger.info(`Mensagem ${key.id} não encontrada no cache`);
+          if (!msg) logger.info(`Mensagem ${key.id} não encontrada no cache`)
 
-          return msg;
+          return msg
         },
       })
 

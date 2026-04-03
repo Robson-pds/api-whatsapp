@@ -3,6 +3,7 @@ const {
 } = require('../lib/helpers/prepareMediaMessageContent.js')
 const sendMessage = require('../lib/helpers/sendMessage.js')
 const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
+const OfficialMessageController = require('../providers/api-whatsapp/controllers/MessageController.js')
 
 const sendTextMedia = async (req, res) => {
   const { phone } = req.params
@@ -12,6 +13,12 @@ const sendTextMedia = async (req, res) => {
   let content
 
   try {
+    if (req.channel === 'whatsapp_api') {
+      if (media?.file) {
+        return await OfficialMessageController.sendMedia(req, res)
+      }
+    }
+
     if (media) {
       content = await prepareMediaMessageContent({
         media: media.file,
@@ -29,7 +36,7 @@ const sendTextMedia = async (req, res) => {
 
     if (sentMessage)
       res.status(200).json({ message: 'Mensagem enviada com sucesso' })
-  } catch (error) {
+  } catch {
     res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
   }
 }

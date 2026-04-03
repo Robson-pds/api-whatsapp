@@ -4,14 +4,14 @@ const getBodyMessage = (msg) => {
     msg.message?.viewOnceMessage?.message ||
     msg.message
 
-  let location = ""
+  let location = ''
   if (m?.locationMessage) {
     location = String(m.locationMessage.degreesLatitude)
   }
 
-  let call = ""
+  let call = ''
   if (msg?.messageStubType === 40 || msg?.messageStubType === 41) {
-    call = "Chamada de voz/vídeo perdida"
+    call = 'Chamada de voz/vídeo perdida'
   }
 
   return (
@@ -27,9 +27,7 @@ const getBodyMessage = (msg) => {
     m?.contactMessage?.vcard ||
     location ||
     call ||
-    JSON.stringify(
-      m?.contactsArrayMessage?.contacts?.map((c) => c.vcard)
-    ) ||
+    JSON.stringify(m?.contactsArrayMessage?.contacts?.map((c) => c.vcard)) ||
     null
   )
 }

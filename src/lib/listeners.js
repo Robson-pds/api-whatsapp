@@ -4,7 +4,7 @@ const logger = require('../utils/logger.js')
 const prepareMessageData = require('./handlers/prepareMessageData.js')
 const isValidMsg = require('./helpers/isValidMessage.js')
 const env = require('../utils/Env.js')
-const {readFileSync, writeFileSync} = require("fs");
+const { readFileSync, writeFileSync } = require('fs')
 const slugfy = require('../utils/slugfy.js')
 
 const sendWebhook = async (webhookUrl, data) => {
@@ -111,45 +111,45 @@ const baileysMessageListeners = (wbot, phone) => {
         })
       }
     }
-  });
+  })
 
-  wbot.ev.on("contacts.upsert", async (contacts) => {
+  wbot.ev.on('contacts.upsert', async (contacts) => {
     let contactsJSONExists
     try {
       contactsJSONExists = readFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`
-      );
-    } catch (error) {
-      contactsJSONExists = null;
+        `data/sessions/${slugfy(wbot.phone)}.json`,
+      )
+    } catch {
+      contactsJSONExists = null
     }
 
     if (contactsJSONExists) {
-      let convertFileJSON = JSON.parse(contactsJSONExists.toString());
+      let convertFileJSON = JSON.parse(contactsJSONExists.toString())
 
       if (
-          contacts &&
-          typeof convertFileJSON === "object" &&
-          convertFileJSON.length > 0
+        contacts &&
+        typeof convertFileJSON === 'object' &&
+        convertFileJSON.length > 0
       ) {
         for await (const contact of contacts) {
           convertFileJSON = convertFileJSON.filter(
-              (value) => value.id !== contact.id
-          );
-          convertFileJSON.push(contact);
+            (value) => value.id !== contact.id,
+          )
+          convertFileJSON.push(contact)
         }
       }
 
       return writeFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`,
-          JSON.stringify(convertFileJSON)
-      );
+        `data/sessions/${slugfy(wbot.phone)}.json`,
+        JSON.stringify(convertFileJSON),
+      )
     }
 
     return writeFileSync(
-        `data/sessions/${slugfy(wbot.phone)}.json`,
-        JSON.stringify(contacts)
-    );
-  });
+      `data/sessions/${slugfy(wbot.phone)}.json`,
+      JSON.stringify(contacts),
+    )
+  })
 }
 
 module.exports = { baileysMessageListeners, sendWebhook }

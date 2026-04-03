@@ -1,41 +1,41 @@
 const { getWbot } = require('../lib/libbaileys.js')
 const logger = require('../utils/logger.js')
-const {readFileSync} = require("fs");
+const { readFileSync } = require('fs')
 const slugfy = require('../utils/slugfy.js')
 
 const list = async (req, res) => {
   const { phone } = req.params
 
-  const contacts = [];
+  const contacts = []
 
   try {
-    const wbot = getWbot(phone);
+    const wbot = getWbot(phone)
 
     if (!wbot) {
-      res.status(400).json({ message: "Sessão não encontrada." });
-      return;
+      res.status(400).json({ message: 'Sessão não encontrada.' })
+      return
     }
 
-    const path = `data/sessions/${slugfy(wbot.phone)}.json`;
-    const contactsBuffer = readFileSync(path);
-    const contactsData = JSON.parse(contactsBuffer.toString());
+    const path = `data/sessions/${slugfy(wbot.phone)}.json`
+    const contactsBuffer = readFileSync(path)
+    const contactsData = JSON.parse(contactsBuffer.toString())
     const contactsFiltered = contactsData.map((c) => {
-      if (c.id === "status@broadcast" || c.id.includes("g.us")) return false;
-      const number = c.id.split("@")[0];
+      if (c.id === 'status@broadcast' || c.id.includes('g.us')) return false
+      const number = c.id.split('@')[0]
 
       return {
         number,
-        name: c.name
-      };
-    });
+        name: c.name,
+      }
+    })
 
-    contacts.push(...contactsFiltered);
+    contacts.push(...contactsFiltered)
   } catch (err) {
-    logger.error(`Could not get whatsapp contacts from phone. ${err}`);
-    res.status(400).json({ message: "Não foi possível obter os contatos." });
+    logger.error(`Could not get whatsapp contacts from phone. ${err}`)
+    res.status(400).json({ message: 'Não foi possível obter os contatos.' })
   }
 
-  res.status(200).json(contacts);
+  res.status(200).json(contacts)
 }
 
 const checkContact = async (req, res) => {

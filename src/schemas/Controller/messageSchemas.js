@@ -9,19 +9,16 @@ const fileSchema = z.object({
 })
 
 const sendMediaSchema = z.object({
-    number: z.string(),
-    file: fileSchema,
-    message: z.string().optional(),
+  number: z.string(),
+  file: fileSchema,
+  message: z.string().optional(),
 })
 
 const sendTextSchema = z.object({
-    number: z.string(),
-    message: z.string().min(1),
+  number: z.string(),
+  message: z.string().min(1),
 })
 
-const sendMessageSchema = z.union([
-  sendTextSchema,
-  sendMediaSchema,
-])
+const sendMessageSchema = z.union([sendTextSchema, sendMediaSchema])
 
 module.exports = { sendMessageSchema, sendTextSchema, sendMediaSchema }

@@ -1,7 +1,4 @@
-const {
-  downloadContentFromMessage,
-  downloadMediaMessage,
-} = require('baileys')
+const { downloadContentFromMessage, downloadMediaMessage } = require('baileys')
 const P = require('pino')
 
 const logger = require('../../utils/logger.js')
@@ -24,7 +21,7 @@ const downloadMedia = async (wbot, msg, contentMessage, mediaType) => {
       {},
       { logger: loggerBaileys, reuploadRequest: wbot.updateMediaMessage },
     )
-  } catch (error) {
+  } catch {
     try {
       if (!contentMessage) return
       const contentMedia = await downloadContentFromMessage(

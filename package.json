@@ -25,6 +25,7 @@
     "express": "^4.21.1",
     "express-fileupload": "^1.5.1",
     "link-preview-js": "2.1.17",
+    "mime-kind": "^4.0.0",
     "node-cache": "^5.1.2",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0",
@@ -38,7 +39,9 @@
   },
   "devDependencies": {
     "@rocketseat/eslint-config": "^2.2.2",
-    "eslint": "9.26.0",
+    "@typescript-eslint/eslint-plugin": "^8.32.0",
+    "@typescript-eslint/parser": "^8.32.0",
+    "eslint": "^8.57.1",
     "eslint-plugin-prettier": "^5.2.1",
     "form-data": "^4.0.5"
   },
@@ -47,6 +50,7 @@
       "@rocketseat/eslint-config/node"
     ],
     "rules": {
+      "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-var-requires": "off"
     }
   }

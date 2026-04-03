@@ -6,7 +6,10 @@ const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
 const env = require('./utils/Env.js')
-const { startWhisperServer, stopWhisperServer } = require('./lib/helpers/whisperServer.js')
+const {
+  startWhisperServer,
+  stopWhisperServer,
+} = require('./lib/helpers/whisperServer.js')
 
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`)
@@ -72,14 +75,17 @@ async function restoreSessions() {
     for (const session of sessions) {
       if (session !== '.gitignore' && session.endsWith('.json')) {
         try {
-          const fileContent = fs.readFileSync(`data/connections/${session}`, 'utf8')
+          const fileContent = fs.readFileSync(
+            `data/connections/${session}`,
+            'utf8',
+          )
           const sessionData = JSON.parse(fileContent)
 
           if (sessionData.phone) {
             logger.info(`Restaurando sessão: ${sessionData.phone}`)
             await initBaileysSocket(sessionData.phone)
             contador++
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise((resolve) => setTimeout(resolve, 500))
           }
         } catch (err) {
           logger.error(`Erro ao restaurar sessão ${session}: ${err.message}`)
@@ -87,7 +93,9 @@ async function restoreSessions() {
       }
     }
 
-    logger.info(`Restauração de sessões concluída. Total de ${contador} sessões iniciadas.`)
+    logger.info(
+      `Restauração de sessões concluída. Total de ${contador} sessões iniciadas.`,
+    )
   } catch (error) {
     logger.error(`Erro fatal na restauração de sessões: ${error.message}`)
   }

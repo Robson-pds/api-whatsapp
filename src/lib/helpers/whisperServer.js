@@ -10,21 +10,36 @@ function startWhisperServer() {
   if (!WHISPER_PORT || !WHISPER_MODEL) return
   if (whisperProcess) return
 
-  const binaryPath = path.resolve(pathBase, 'whisper.cpp/build/bin/whisper-server')
-  const modelPath = path.resolve(pathBase, `whisper.cpp/models/ggml-${WHISPER_MODEL}.bin`)
+  const binaryPath = path.resolve(
+    pathBase,
+    'whisper.cpp/build/bin/whisper-server',
+  )
+  const modelPath = path.resolve(
+    pathBase,
+    `whisper.cpp/models/ggml-${WHISPER_MODEL}.bin`,
+  )
   const cpu = os.cpus().length.toString()
 
   console.log(`[Whisper]: Iniciando servidor com ${cpu} threads`)
 
-  whisperProcess = spawn(binaryPath, [
-    '-m', modelPath,
-    '-l', 'pt',
-    '-t', cpu,
-    '--host', '127.0.0.1',
-    '--port', WHISPER_PORT
-  ], {
-    stdio: ['ignore', 'pipe', 'pipe']
-  })
+  whisperProcess = spawn(
+    binaryPath,
+    [
+      '-m',
+      modelPath,
+      '-l',
+      'pt',
+      '-t',
+      cpu,
+      '--host',
+      '127.0.0.1',
+      '--port',
+      WHISPER_PORT,
+    ],
+    {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    },
+  )
 
   whisperProcess.stdout.on('data', (data) => {
     console.log(`[Whisper]: ${data.toString().trim()}`)
@@ -61,5 +76,5 @@ function stopWhisperServer() {
 
 module.exports = {
   startWhisperServer,
-  stopWhisperServer
+  stopWhisperServer,
 }

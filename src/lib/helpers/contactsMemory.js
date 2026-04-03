@@ -10,29 +10,29 @@ const CACHE_TTL = 4 * 60 * 60
 const CACHE_CHECK_PERIOD = 1 * 60 * 60
 
 const store = {
-    contacts: new NodeCache({
-        stdTTL: CACHE_TTL,
-        checkperiod: CACHE_CHECK_PERIOD,
-        useClones: false
-    })
+  contacts: new NodeCache({
+    stdTTL: CACHE_TTL,
+    checkperiod: CACHE_CHECK_PERIOD,
+    useClones: false,
+  }),
 }
 
 function getDb() {
-    const dbDir = join(pathBase, 'data', 'db')
-    const dbPath = join(dbDir, 'contacts.db')
+  const dbDir = join(pathBase, 'data', 'db')
+  const dbPath = join(dbDir, 'contacts.db')
 
-    if (!existsSync(dbDir)) {
-        mkdirSync(dbDir, { recursive: true })
-    }
+  if (!existsSync(dbDir)) {
+    mkdirSync(dbDir, { recursive: true })
+  }
 
-    if (!dbInstance) {
-        const db = new Database(dbPath)
+  if (!dbInstance) {
+    const db = new Database(dbPath)
 
-        db.pragma('journal_mode = WAL')
-        db.pragma('synchronous = NORMAL')
-        db.pragma('busy_timeout = 5000')
+    db.pragma('journal_mode = WAL')
+    db.pragma('synchronous = NORMAL')
+    db.pragma('busy_timeout = 5000')
 
-        db.exec(`
+    db.exec(`
             CREATE TABLE IF NOT EXISTS contacts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 jid TEXT NOT NULL UNIQUE,
@@ -44,68 +44,68 @@ function getDb() {
             CREATE INDEX IF NOT EXISTS idx_contacts_jid ON contacts(jid);
         `)
 
-        dbInstance = db
-    }
+    dbInstance = db
+  }
 
-    return dbInstance
+  return dbInstance
 }
 
 function saveContact(jid, lid, mediatype) {
-    if (!jid || !lid || !mediatype) return
+  if (!jid || !lid || !mediatype) return
 
-    const db = getDb()
+  const db = getDb()
 
-    const stmt = db.prepare(`
+  const stmt = db.prepare(`
         INSERT INTO contacts (jid, lid, mediatype)
         VALUES (?, ?, ?)
         ON CONFLICT(jid) DO UPDATE SET
         lid = excluded.lid
     `)
 
-    stmt.run(jid, lid, mediatype)
-    store.contacts.set(jid, lid)
+  stmt.run(jid, lid, mediatype)
+  store.contacts.set(jid, lid)
 }
 
 function getLidByJid(jid) {
-    if (!jid) return null
+  if (!jid) return null
 
-    const cached = store.contacts.get(jid)
-    if (cached) {
-        store.contacts.ttl(jid, CACHE_TTL)
-        return cached
-    }
+  const cached = store.contacts.get(jid)
+  if (cached) {
+    store.contacts.ttl(jid, CACHE_TTL)
+    return cached
+  }
 
-    const db = getDb()
+  const db = getDb()
 
-    const stmt = db.prepare(`SELECT lid FROM contacts WHERE jid = ?`)
-    const row = stmt.get(jid)
+  const stmt = db.prepare(`SELECT lid FROM contacts WHERE jid = ?`)
+  const row = stmt.get(jid)
 
-    if (row) {
-        store.contacts.set(jid, row.lid)
-        return row.lid
-    }
+  if (row) {
+    store.contacts.set(jid, row.lid)
+    return row.lid
+  }
 
-    return null
+  return null
 }
 
 function deleteContact(jid) {
-    if (!jid) return
+  if (!jid) return
 
-    const db = getDb()
-    db.prepare(`DELETE FROM contacts WHERE jid = ?`).run(jid)
-    store.contacts.del(jid)
+  const db = getDb()
+  db.prepare(`DELETE FROM contacts WHERE jid = ?`).run(jid)
+  store.contacts.del(jid)
 }
 
 function closeDatabase() {
-    if (dbInstance) {
-        dbInstance.close()
-        dbInstance = null
-    }
+  if (dbInstance) {
+    dbInstance.close()
+    dbInstance = null
+  }
 }
 
 module.exports = {
-    saveContact,
-    getLidByJid,
-    deleteContact,
-    closeDatabase
+  saveContact,
+  getLidByJid,
+  deleteContact,
+  closeDatabase,
 }

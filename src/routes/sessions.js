@@ -5,33 +5,42 @@ const validateData = require('../middleware/validateData.js')
 const SessionSchemas = require('../schemas/Controller/sessionSchemas.js')
 const registry = require('../docs/registry.js')
 const { z } = require('../lib/zod.js')
-const {responseMessageSchema} = require("../schemas/docs/responseMessage");
+const { responseMessageSchema } = require('../schemas/docs/responseMessage')
 
 const sessionRoutes = Router()
 
 sessionRoutes.get('/', isAuth, SessionController.index)
 
 registry.registerPath({
-    method: 'get',
-    path: '/sessions',
-    tags: ['Sessions'],
-    security: [{ bearerAuth: [] }],
-    responses: {
-        200: {
-            description: 'Lista de sessões',
-            content: {
-                'application/json': {
-                    schema: z.array(z.object({
-                        phone: z.string(),
-                    })).openapi({ example: [{ phone: '5599999999999' }] })
-                }
-            }
-        }
-    }
+  method: 'get',
+  path: '/sessions',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: 'Lista de sessões',
+      content: {
+        'application/json': {
+          schema: z
+            .array(
+              z.object({
+                phone: z.string(),
+              }),
+            )
+            .openapi({ example: [{ phone: '5599999999999' }] }),
+        },
+      },
+    },
+  },
 })
-registry.register('sessionIndexSchema', z.array(z.object({
-    phone: z.string(),
-})))
+registry.register(
+  'sessionIndexSchema',
+  z.array(
+    z.object({
+      phone: z.string(),
+    }),
+  ),
+)
 
 sessionRoutes.post(
   '/start',
@@ -41,49 +50,61 @@ sessionRoutes.post(
 )
 
 registry.registerPath({
-    method: "post",
-    path: '/sessions/start',
-    tags: ['Sessions'],
-    security: [{ bearerAuth: [] }],
-    request:{
-      body:{
-          content:{
-              'application/json':{
-                  schema: SessionSchemas.createSessionSchema
-              }
-          }
-      }
-    },
-    responses: {
-        200: {
-            description: 'Retornado sessão com sucesso',
-            content: {
-                'application/json': {
-                    schema: z.object({
-                        status: z.int(),
-                        qr: z.string(),
-                    }).openapi({ example: { status: 1, qr: 'codigo qrcode' } })
-                }
-            }
+  method: 'post',
+  path: '/sessions/start',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: SessionSchemas.createSessionSchema,
         },
-        201: {
-            description: 'Sessão criada com sucesso',
-            content: {
-                'application/json': {
-                    schema: z.object({
-                        message: z.string(),
-                        qr: z.string(),
-                    }).openapi({ example: { message: 'Sessão criada com sucesso', qr: 'codigo qrcode' } })
-                }
-            }
-        }
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Retornado sessão com sucesso',
+      content: {
+        'application/json': {
+          schema: z
+            .object({
+              status: z.int(),
+              qr: z.string(),
+            })
+            .openapi({ example: { status: 1, qr: 'codigo qrcode' } }),
+        },
+      },
+    },
+    201: {
+      description: 'Sessão criada com sucesso',
+      content: {
+        'application/json': {
+          schema: z
+            .object({
+              message: z.string(),
+              qr: z.string(),
+            })
+            .openapi({
+              example: {
+                message: 'Sessão criada com sucesso',
+                qr: 'codigo qrcode',
+              },
+            }),
+        },
+      },
+    },
+  },
 })
 registry.register('createSessionSchema', SessionSchemas.createSessionSchema)
-registry.register('createSessionResponseSchema', z.object({
+registry.register(
+  'createSessionResponseSchema',
+  z.object({
     message: z.string(),
     qr: z.string(),
-}))
+  }),
+)
 
 sessionRoutes.post(
   '/add-webhook',
@@ -93,30 +114,33 @@ sessionRoutes.post(
 )
 
 registry.registerPath({
-    method: "post",
-    path: '/sessions/add-webhook',
-    tags: ['Sessions'],
-    security: [{ bearerAuth: [] }],
-    request:{
-        body:{
-            content:{
-                'application/json':{
-                    schema: SessionSchemas.addWebhookSchema
-                }
-            }
-        }
-    },
-    responses: {
-        200: {
-            description: 'Webhook adicionado com sucesso',
-            content: {
-                'application/json': { schema: responseMessageSchema.openapi({ example: { message: 'Webhook adicionado com sucesso' } }) }
-            }
+  method: 'post',
+  path: '/sessions/add-webhook',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: SessionSchemas.addWebhookSchema,
         },
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Webhook adicionado com sucesso',
+      content: {
+        'application/json': {
+          schema: responseMessageSchema.openapi({
+            example: { message: 'Webhook adicionado com sucesso' },
+          }),
+        },
+      },
+    },
+  },
 })
 registry.register('addWebhookSchema', SessionSchemas.addWebhookSchema)
-
 
 sessionRoutes.delete(
   '/remove',
@@ -126,27 +150,31 @@ sessionRoutes.delete(
 )
 
 registry.registerPath({
-    method: "delete",
-    path: '/sessions/remove',
-    tags: ['Sessions'],
-    security: [{ bearerAuth: [] }],
-    request:{
-        body:{
-            content:{
-                'application/json':{
-                    schema: SessionSchemas.deleteSessionSchema
-                }
-            }
-        }
-    },
-    responses: {
-        200: {
-            description: 'Sessão excluída com sucesso',
-            content: {
-                'application/json': { schema: responseMessageSchema.openapi({ example: { message: 'Sessão excluída com sucesso'} }) }
-            }
+  method: 'delete',
+  path: '/sessions/remove',
+  tags: ['Sessions'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: SessionSchemas.deleteSessionSchema,
         },
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Sessão excluída com sucesso',
+      content: {
+        'application/json': {
+          schema: responseMessageSchema.openapi({
+            example: { message: 'Sessão excluída com sucesso' },
+          }),
+        },
+      },
+    },
+  },
 })
 registry.register('deleteSessionSchema', SessionSchemas.deleteSessionSchema)
 
