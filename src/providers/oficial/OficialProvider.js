@@ -51,11 +51,11 @@ class OficialProvider extends IWhatsAppProvider {
   }
 
   async markAsRead(chatId) {
-    return true
+    await markMessages(chatId, this.phone)
   }
 
   async getUnreadMessages() {
-    throw new Error('Unread messages not supported in oficial provider')
+    throw new Error('Opção não suportada na API Oficial')
   }
 
   async prepareMediaContent(media, body) {
