@@ -1,6 +1,7 @@
 const { Router } = require('express')
 const SessionController = require('../controllers/SessionController.js')
 const isAuth = require('../middleware/isAuth.js')
+const channelMiddleware = require('../middleware/channel.js')
 const validateData = require('../middleware/validateData.js')
 const SessionSchemas = require('../schemas/Controller/sessionSchemas.js')
 const registry = require('../docs/registry.js')
@@ -58,14 +59,34 @@ registry.registerPath({
     body: {
       content: {
         'application/json': {
-          schema: SessionSchemas.createSessionSchema,
+          schema: z.object({
+            phone: z.string().openapi({
+              description:
+                'Número de telefone com código do país (12-13 dígitos)',
+              example: '5599999999999',
+            }),
+            channel: z.enum(['whaileys', 'oficial']).openapi({
+              description:
+                'Provedor WhatsApp: whaileys (Baileys/Não-oficial) ou oficial (WABA/API Oficial)',
+              example: 'whaileys',
+            }),
+            webhooks: z
+              .object({
+                receiveMessage: z.string().url().optional(),
+              })
+              .optional()
+              .openapi({
+                description:
+                  'URLs de webhooks para receber mensagens e eventos',
+              }),
+          }),
         },
       },
     },
   },
   responses: {
     200: {
-      description: 'Retornado sessão com sucesso',
+      description: 'Sessão retornada com sucesso',
       content: {
         'application/json': {
           schema: z
@@ -109,6 +130,7 @@ registry.register(
 sessionRoutes.post(
   '/add-webhook',
   isAuth,
+  channelMiddleware,
   validateData(SessionSchemas.addWebhookSchema),
   SessionController.addWebhook,
 )
@@ -126,6 +148,19 @@ registry.registerPath({
         },
       },
     },
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description:
+          'Provedor WhatsApp: whaileys ou oficial (opcional, pode estar em header, query ou body)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {

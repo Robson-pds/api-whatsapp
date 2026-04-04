@@ -1,6 +1,5 @@
 const getContentType = (msg, media = null) => {
   if (msg?.messageStubType === 40 || msg?.messageStubType === 41) {
-    // 40 = Chamada de voz perdida, 41 = Chamada de video perdida
     return 'call_log'
   }
 

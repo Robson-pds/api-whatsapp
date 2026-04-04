@@ -4,8 +4,8 @@ const { readFileSync, unlinkSync, writeFile } = require('fs')
 const mime = require('mime')
 const { promisify } = require('util')
 
-const { pathTmp } = require('../../utils/folderPaths.js')
-const { isAudio, isImage, isVideo } = require('../../utils/getMimeFormat.js')
+const { pathTmp } = require('../../../utils/folderPaths.js')
+const { isAudio, isImage, isVideo } = require('../../../utils/getMimeFormat.js')
 
 const processAudio = async (audio) => {
   const outputAudio = `${pathTmp}/${new Date().getTime()}.opus`
@@ -71,3 +71,4 @@ const prepareMediaMessageContent = async ({ media, body }) => {
 }
 
 module.exports = { prepareMediaMessageContent, processAudio }
+

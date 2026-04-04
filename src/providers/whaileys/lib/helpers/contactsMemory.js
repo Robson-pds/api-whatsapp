@@ -2,7 +2,7 @@ const Database = require('better-sqlite3')
 const NodeCache = require('node-cache')
 const { existsSync, mkdirSync } = require('fs')
 const { join } = require('path')
-const { pathBase } = require('../../utils/folderPaths')
+const { pathBase } = require('../../../../utils/folderPaths')
 
 let dbInstance = null
 

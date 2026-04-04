@@ -4,9 +4,9 @@ const getContentType = require('../helpers/getContentType.js')
 const getMediaContent = require('../helpers/getMediaContent.js')
 const { jidNormalizedUser } = require('baileys')
 const { getLidByJid, saveContact } = require('../helpers/contactsMemory')
-const { replaceNonDigits } = require('../../utils/replaceNonDigits')
-const { isAudio } = require('../../utils/getMimeFormat')
-const { transcribeAudioLocal } = require('../helpers/transcribeAudio')
+const { replaceNonDigits } = require('../../../../utils/replaceNonDigits')
+const { isAudio } = require('../../../../utils/getMimeFormat')
+const { transcribeAudioLocal } = require('../../../../lib/transcribeAudio')
 
 const prepareMessageData = async (message, wbot) => {
   const rawJidLid = String(

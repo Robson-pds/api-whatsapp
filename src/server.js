@@ -1,7 +1,6 @@
 const express = require('express')
 const fileUpload = require('express-fileupload')
 const fs = require('fs')
-const { initBaileysSocket } = require('./lib/libbaileys.js')
 const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
@@ -9,7 +8,8 @@ const env = require('./utils/Env.js')
 const {
   startWhisperServer,
   stopWhisperServer,
-} = require('./lib/helpers/whisperServer.js')
+} = require('./lib/whisperServer.js')
+const providerManager = require('./providers/ProviderManager.js')
 
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`)
@@ -83,7 +83,11 @@ async function restoreSessions() {
 
           if (sessionData.phone) {
             logger.info(`Restaurando sessão: ${sessionData.phone}`)
-            await initBaileysSocket(sessionData.phone)
+            await providerManager.restoreProvider(
+              sessionData.phone,
+              sessionData.channel || 'whaileys',
+              sessionData.webhooks,
+            )
             contador++
             await new Promise((resolve) => setTimeout(resolve, 500))
           }

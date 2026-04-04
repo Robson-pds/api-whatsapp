@@ -1,19 +1,6 @@
 const fs = require('fs')
-const {
-  getWbot,
-  initBaileysSocket,
-  removeWbot,
-} = require('../lib/libbaileys.js')
-const logger = require('../utils/logger.js')
 const sleep = require('../utils/sleep.js')
-
-const state = [
-  'UNKNOWN',
-  'CONNECTING',
-  'CONNECTED',
-  'DISCONNECTING',
-  'DISCONNECTED',
-]
+const providerManager = require('../providers/ProviderManager.js')
 
 const index = async (_, res) => {
   const sessions = fs.readdirSync('data/connections')
@@ -33,37 +20,39 @@ const index = async (_, res) => {
 }
 
 const store = async (req, res) => {
-  const { phone, webhooks } = req.body
+  const { phone, channel = 'whaileys', webhooks } = req.body
 
-  try {
-    const wbot = getWbot(phone)
-    if (wbot) {
-      return res.status(200).json({
-        status: state[wbot.user ? 2 : 1],
-        qr: wbot.qr,
-      })
-    }
-  } catch (error) {
-    logger.error(error)
+  const provider = providerManager.getProvider(phone)
+  if (provider) {
+    const qr = provider.getQR(phone)
+    return res.status(200).json({
+      status: 'CONNECTED',
+      qr,
+    })
   }
 
   fs.writeFileSync(
     `data/connections/${phone}.json`,
-    JSON.stringify({ phone, webhooks }),
+    JSON.stringify({ phone, channel, webhooks }),
   )
 
-  const session = await initBaileysSocket(phone)
+  const newProvider = await providerManager.createProvider(
+    phone,
+    channel,
+    webhooks,
+  )
   await sleep(1)
+  const qr = newProvider.getQR(phone)
   return res.status(201).json({
     message: 'Sessão criada com sucesso',
-    qr: session.qr,
+    qr,
   })
 }
 
 const remove = async (req, res) => {
   const { phone } = req.body
 
-  await removeWbot(phone)
+  await providerManager.removeProvider(phone)
 
   res.status(200).json({ message: 'Sessão excluída com sucesso' })
 }
@@ -71,18 +60,16 @@ const remove = async (req, res) => {
 const addWebhook = async (req, res) => {
   const { phone, webhooks, type } = req.body
 
-  try {
-    const wbot = getWbot(phone)
-    if (wbot.phone === undefined) return
-    const path = `data/connections/${wbot.phone}.json`
+  const provider = providerManager.getProvider(phone)
+  if (provider) {
+    await provider.addWebhook(type, webhooks)
+    const path = `data/connections/${phone}.json`
     const data = JSON.parse(fs.readFileSync(path, 'utf-8'))
     data.webhooks = {
       ...data.webhooks,
       [type]: webhooks,
     }
     fs.writeFileSync(path, JSON.stringify(data), { flag: 'w' })
-  } catch (error) {
-    logger.error(error)
   }
 
   res.status(200).json({ message: 'Webhook adicionado com sucesso' })

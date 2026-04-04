@@ -1,23 +1,11 @@
-const axios = require('axios')
-const fetchWebHook = require('../utils/fetchWebHook.js')
-const logger = require('../utils/logger.js')
-const prepareMessageData = require('./handlers/prepareMessageData.js')
-const isValidMsg = require('./helpers/isValidMessage.js')
-const env = require('../utils/Env.js')
+const fetchWebHook = require('../../utils/fetchWebHook.js')
+const logger = require('../../utils/logger.js')
+const prepareMessageData = require('./lib/handlers/prepareMessageData.js')
+const isValidMsg = require('./lib/helpers/isValidMessage.js')
+const env = require('../../utils/Env.js')
 const { readFileSync, writeFileSync } = require('fs')
-const slugfy = require('../utils/slugfy.js')
-
-const sendWebhook = async (webhookUrl, data) => {
-  try {
-    await axios.post(webhookUrl, data, {
-      headers: {
-        'api-token': env.API_KEY,
-      },
-    })
-  } catch (error) {
-    logger.error(error)
-  }
-}
+const slugfy = require('../../utils/slugfy.js')
+const sendWebhook = require('../../utils/sendWebhook.js')
 
 const baileysMessageListeners = (wbot, phone) => {
   logger.info(`Iniciando sessão ${phone}`)
@@ -152,4 +140,4 @@ const baileysMessageListeners = (wbot, phone) => {
   })
 }
 
-module.exports = { baileysMessageListeners, sendWebhook }
+module.exports = { baileysMessageListeners }

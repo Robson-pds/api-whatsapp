@@ -12,10 +12,10 @@ const {
 const P = require('pino')
 const { format } = require('date-fns')
 const fs = require('fs')
-const logger = require('../utils/logger.js')
-const slugfy = require('../utils/slugfy.js')
+const logger = require('../../utils/logger.js')
+const slugfy = require('../../utils/slugfy.js')
 const { baileysMessageListeners } = require('./listeners.js')
-const env = require('../utils/Env.js')
+const env = require('../../utils/Env.js')
 
 const loggerBaileys = P({
   timestamp: () => `,"time":"${new Date().toJSON()}"`,
@@ -117,7 +117,6 @@ const initBaileysSocket = async (phone) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
       const sessionPath = `data/sessions/${phone}`
       const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
 
@@ -128,9 +127,7 @@ const initBaileysSocket = async (phone) => {
         generateHighQualityLinkPreview: true,
         receivedPendingNotifications: true,
         browser: ['ApiBaileys', '', ''],
-        // Evitar a msg de "Time Out", para não reiniciar o backend
         defaultQueryTimeoutMs: 0,
-        // Ignora as mensagens de status do contato ou newsletter ou grupos
         shouldIgnoreJid: (jid) =>
           isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
         auth: {

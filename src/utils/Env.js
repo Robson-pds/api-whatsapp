@@ -44,13 +44,13 @@ const envSchema = z.object({
   FROMME: z.string().transform((v) => v === '1'),
   API_KEY: z.string().min(10, 'Chave muito pequena'),
   WEBHOOK: z.string().min(10, 'Verifique o endereço do Webhook Padrão'),
-  WABA_BASE_URL: z.string().url({ message: 'URL inválida' }),
-  WABA_GRAPH_VERSION: z.string().min(1),
-  WABA_APP_CLIENT_ID: z.string().min(1),
-  WABA_APP_CLIENT_SECRET: z.string().min(1),
   WA_VERSION: ValidaWaVersion,
   WHISPER_PORT: z.string().optional(),
   WHISPER_MODEL: z.string().optional(),
+  WABA_BASE_URL: z.string().url({ message: 'URL inválida' }).optional(),
+  WABA_GRAPH_VERSION: z.string().min(1).optional(),
+  WABA_APP_CLIENT_ID: z.string().min(1).optional(),
+  WABA_APP_CLIENT_SECRET: z.string().min(1).optional(),
 })
 
 module.exports = envSchema.parse(process.env)

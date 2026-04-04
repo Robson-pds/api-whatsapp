@@ -1,6 +1,7 @@
 const express = require('express')
 const ContactController = require('../controllers/ContactController.js')
 const isAuth = require('../middleware/isAuth.js')
+const channelMiddleware = require('../middleware/channel.js')
 const validateData = require('../middleware/validateData.js')
 const ContactSchemas = require('../schemas/Controller/contactSchemas.js')
 const registry = require('../docs/registry.js')
@@ -13,7 +14,12 @@ const {
 
 const contactsRoutes = express.Router()
 
-contactsRoutes.get('/:phone/list', isAuth, ContactController.list)
+contactsRoutes.get(
+  '/:phone/list',
+  isAuth,
+  channelMiddleware,
+  ContactController.list,
+)
 
 registry.registerPath({
   method: 'get',
@@ -24,6 +30,18 @@ registry.registerPath({
     params: z.object({
       phone: z.string().openapi({ example: '5599999999999' }),
     }),
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header ou query)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {
@@ -50,6 +68,7 @@ registry.registerPath({
 contactsRoutes.post(
   '/:phone/check',
   isAuth,
+  channelMiddleware,
   validateData(ContactSchemas.checkContactSchema),
   ContactController.checkContact,
 )
@@ -70,10 +89,22 @@ registry.registerPath({
         },
       },
     },
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {
-      description: 'Mensagens lidas com sucesso',
+      description: 'Contato verificado com sucesso',
       content: {
         'application/json': { schema: contactSchemas },
       },
@@ -95,6 +126,7 @@ registry.register('checkContactSchema', ContactSchemas.checkContactSchema)
 contactsRoutes.post(
   '/:phone/profile-picture',
   isAuth,
+  channelMiddleware,
   validateData(ContactSchemas.getProfilePictureSchema),
   ContactController.getProfilePicture,
 )
@@ -115,10 +147,22 @@ registry.registerPath({
         },
       },
     },
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {
-      description: 'Mensagens lidas com sucesso',
+      description: 'Foto de perfil obtida com sucesso',
       content: {
         'application/json': {
           schema: z.object({

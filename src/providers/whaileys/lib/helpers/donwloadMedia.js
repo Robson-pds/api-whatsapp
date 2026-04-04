@@ -1,8 +1,8 @@
 const { downloadContentFromMessage, downloadMediaMessage } = require('baileys')
 const P = require('pino')
 
-const logger = require('../../utils/logger.js')
-const streamToBuffer = require('../../utils/streamToBuffer.js')
+const logger = require('../../../../utils/logger.js')
+const streamToBuffer = require('../../../../utils/streamToBuffer.js')
 
 const loggerBaileys = P({
   timestamp: () => `,"time":"${new Date().toJSON()}"`,

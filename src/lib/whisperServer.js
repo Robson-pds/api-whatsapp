@@ -1,8 +1,8 @@
 const { spawn } = require('child_process')
 const path = require('path')
 const os = require('os')
-const { WHISPER_PORT, WHISPER_MODEL } = require('../../utils/Env.js')
-const { pathBase } = require('../../utils/folderPaths')
+const { WHISPER_PORT, WHISPER_MODEL } = require('../utils/Env.js')
+const { pathBase } = require('../utils/folderPaths')
 
 let whisperProcess = null
 

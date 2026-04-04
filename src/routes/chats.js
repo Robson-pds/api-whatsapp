@@ -2,6 +2,7 @@ const express = require('express')
 const registry = require('../docs/registry.js')
 const readMessages = require('../controllers/ChatController.js')
 const isAuth = require('../middleware/isAuth.js')
+const channelMiddleware = require('../middleware/channel.js')
 const validateData = require('../middleware/validateData.js')
 const ChatSchemasSchemas = require('../schemas/Controller/chatSchemas.js')
 const { responseMessageSchema } = require('../schemas/docs/responseMessage')
@@ -12,6 +13,7 @@ const chatsRoutes = express.Router()
 chatsRoutes.post(
   '/:phone/read',
   isAuth,
+  channelMiddleware,
   validateData(ChatSchemasSchemas.readMessagesSchema),
   readMessages,
 )
@@ -32,6 +34,18 @@ registry.registerPath({
         },
       },
     },
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {

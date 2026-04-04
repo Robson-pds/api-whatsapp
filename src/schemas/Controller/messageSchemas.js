@@ -19,6 +19,26 @@ const sendTextSchema = z.object({
   message: z.string().min(1),
 })
 
-const sendMessageSchema = z.union([sendTextSchema, sendMediaSchema])
+const sendTemplateSchema = z.object({
+  number: z.string(),
+  template: z.object({
+    name: z.string(),
+    language: z.object({
+      code: z.string(),
+    }),
+    components: z.array(z.any()).optional(),
+  }),
+})
 
-module.exports = { sendMessageSchema, sendTextSchema, sendMediaSchema }
+const sendMessageSchema = z.union([
+  sendTextSchema,
+  sendMediaSchema,
+  sendTemplateSchema,
+])
+
+module.exports = {
+  sendMessageSchema,
+  sendTextSchema,
+  sendMediaSchema,
+  sendTemplateSchema,
+}

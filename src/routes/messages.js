@@ -33,13 +33,28 @@ registry.registerPath({
     body: {
       content: {
         'application/json': {
-          schema: MessageSchemas.sendTextSchema,
+          schema: z.union([
+            MessageSchemas.sendTextSchema,
+            MessageSchemas.sendTemplateSchema,
+          ]),
         },
         'multipart/form-data': {
           schema: MessageSchemas.sendMediaSchema,
         },
       },
     },
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {
@@ -66,8 +81,14 @@ registry.registerPath({
 })
 registry.register('sendTextSchema', MessageSchemas.sendTextSchema)
 registry.register('sendMediaSchema', MessageSchemas.sendMediaSchema)
+registry.register('sendTemplateSchema', MessageSchemas.sendTemplateSchema)
 
-messageRoutes.get('/:phone/unread', isAuth, MessageController.unreadMessages)
+messageRoutes.get(
+  '/:phone/unread',
+  isAuth,
+  channelMiddleware,
+  MessageController.unreadMessages,
+)
 
 registry.registerPath({
   method: 'get',
@@ -78,6 +99,18 @@ registry.registerPath({
     params: z.object({
       phone: z.string().openapi({ example: '5599999999999' }),
     }),
+    parameters: [
+      {
+        name: 'channel',
+        in: 'header',
+        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header ou query)',
+        schema: {
+          type: 'string',
+          enum: ['whaileys', 'oficial'],
+          example: 'whaileys',
+        },
+      },
+    ],
   },
   responses: {
     200: {

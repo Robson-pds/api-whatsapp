@@ -1,43 +1,31 @@
-const {
-  prepareMediaMessageContent,
-} = require('../lib/helpers/prepareMediaMessageContent.js')
-const sendMessage = require('../lib/helpers/sendMessage.js')
-const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
-const OfficialMessageController = require('../providers/api-whatsapp/controllers/MessageController.js')
+const providerManager = require('../providers/ProviderManager.js')
 
 const sendTextMedia = async (req, res) => {
   const { phone } = req.params
-  const { number, message = '' } = req.body
+  const { number, message = '', template } = req.body
   const media = req.files
 
-  let content
+  const provider = providerManager.getProvider(phone)
+  if (!provider) {
+    return res.status(400).json({ message: 'Sessão não encontrada.' })
+  }
 
   try {
-    if (req.channel === 'whatsapp_api') {
-      if (media?.file) {
-        return await OfficialMessageController.sendMedia(req, res)
+    if (template) {
+      await provider.sendTemplate(number, template)
+    } else {
+      let content
+      if (media) {
+        content = await provider.prepareMediaContent(media.file, message)
+        await provider.sendMedia(number, content)
+      } else {
+        await provider.sendText(number, message)
       }
     }
 
-    if (media) {
-      content = await prepareMediaMessageContent({
-        media: media.file,
-        body: message,
-      })
-    } else {
-      content = { text: message }
-    }
-
-    const sentMessage = await sendMessage({
-      phone,
-      number,
-      content,
-    })
-
-    if (sentMessage)
-      res.status(200).json({ message: 'Mensagem enviada com sucesso' })
-  } catch {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
+    res.status(200).json({ message: 'Mensagem enviada com sucesso' })
+  } catch (error) {
+    res.status(400).json({ message: 'Erro ao enviar mensagem' })
   }
 }
 
@@ -45,7 +33,12 @@ const unreadMessages = async (req, res) => {
   const { phone } = req.params
 
   try {
-    const messages = await GetAllUnreadMessages(phone)
+    const provider = providerManager.getProvider(phone)
+    if (!provider) {
+      return res.status(400).json({ message: 'Sessão não encontrada.' })
+    }
+
+    const messages = await provider.getUnreadMessages()
 
     res.status(200).json(messages)
   } catch (error) {

@@ -1,8 +1,8 @@
-const { getWbot } = require('../libbaileys')
-const sleep = require('../../utils/sleep')
-const prepareMessageData = require('../handlers/prepareMessageData')
-const env = require('../../utils/Env')
-const isValidMsg = require('./isValidMessage')
+const { getWbot } = require('../libbaileys.js')
+const sleep = require('../../../utils/sleep.js')
+const prepareMessageData = require('./handlers/prepareMessageData.js')
+const env = require('../../../utils/Env.js')
+const isValidMsg = require('./helpers/isValidMessage.js')
 
 const GetAllUnreadMessages = async (phone) => {
   console.log('Chamando o GetAllUnreadMessages')
@@ -64,3 +64,4 @@ const GetAllUnreadMessages = async (phone) => {
   return 0
 }
 module.exports = GetAllUnreadMessages
+

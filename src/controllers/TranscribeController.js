@@ -1,5 +1,5 @@
 const logger = require('../utils/logger.js')
-const { transcribeAudio } = require('../lib/helpers/transcribeAudio')
+const { transcribeAudio } = require('../lib/transcribeAudio.js')
 const { WHISPER_PORT, WHISPER_MODEL } = require('../utils/Env.js')
 
 const transcribe = async (req, res) => {

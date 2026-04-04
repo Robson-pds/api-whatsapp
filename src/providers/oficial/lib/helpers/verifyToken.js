@@ -1,6 +1,6 @@
 const { addSeconds, differenceInHours } = require('date-fns')
 const fs = require('fs')
-const graphAPI = require('../graphAPI')
+const refreshToken = require('./refreshToken')
 
 const verifyToken = async (sessionId) => {
   const sessions = fs.readdirSync('sessions')
@@ -18,7 +18,7 @@ const verifyToken = async (sessionId) => {
   const expiresAt = new Date(sessionData.expiresAt)
 
   if (differenceInHours(expiresAt, now) < 48) {
-    const data = await graphAPI.refreshToken(sessionData.token)
+    const data = await refreshToken(sessionData.token)
 
     sessionData.token = data.access_token
     sessionData.expiresAt = addSeconds(new Date(), data.expires_in)
