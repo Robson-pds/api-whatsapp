@@ -17,6 +17,8 @@ const sendTextMedia = async (req, res) => {
       if (media?.file) {
         return await OfficialMessageController.sendMedia(req, res)
       }
+
+      return await OfficialMessageController.sendText(req, res)
     }
 
     if (media) {

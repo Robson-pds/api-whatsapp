@@ -1,7 +1,12 @@
 const { getWbot } = require('../lib/libbaileys.js')
 const logger = require('../utils/logger.js')
+const OfficialChatController = require("../providers/api-whatsapp/controllers/ChatController.js")
 
 const readMessages = async (req, res) => {
+  if (req.channel === 'whatsapp_api') {
+    return await OfficialChatController.readMessages(req, res);
+  }
+  
   const { phone } = req.params
 
   try {

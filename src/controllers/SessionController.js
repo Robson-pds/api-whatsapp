@@ -4,6 +4,7 @@ const {
   initBaileysSocket,
   removeWbot,
 } = require('../lib/libbaileys.js')
+const OfficialSessionController = require("../providers/api-whatsapp/controllers/SessionController.js")
 const logger = require('../utils/logger.js')
 const sleep = require('../utils/sleep.js')
 
@@ -33,6 +34,10 @@ const index = async (_, res) => {
 }
 
 const store = async (req, res) => {
+  if (req.channel === 'whatsapp_api') {
+    return await OfficialSessionController.store(req, res);
+  }
+
   const { phone, webhooks } = req.body
 
   try {
