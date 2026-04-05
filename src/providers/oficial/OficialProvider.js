@@ -2,6 +2,9 @@ const IWhatsAppProvider = require('../../interfaces/IWhatsAppProvider.js')
 const fs = require('fs')
 const logger = require('../../utils/logger.js')
 const sendMessage = require('./lib/helpers/sendMessage.js')
+const getAccessToken = require('./lib/helpers/getAccessToken.js')
+const enableSubscriptionsWebhook = require('./lib/helpers/enableSubscriptionsWebhook.js')
+const registerPhoneNumber = require('./lib/helpers/registerPhoneNumber.js')
 
 class OficialProvider extends IWhatsAppProvider {
   constructor() {
@@ -13,7 +16,41 @@ class OficialProvider extends IWhatsAppProvider {
   async connect(phone, webhooks) {
     this.phone = phone
     this.webhooks = webhooks
-    return { phone, webhooks }
+
+    try {
+      const accessToken = await getAccessToken(sessionData.code);
+
+      if (!accessToken) {
+        logger.error("Erro ao obter token de acesso");
+        return null;
+      }
+
+      const responseHook = await enableSubscriptionsWebhook(
+        sessionData.wabaId,
+        accessToken
+      );
+
+      const pin = await registerPhoneNumber(
+        responseHook?.phoneNumberId,
+        accessToken
+      );
+
+      const data = {
+        sessionId: sessionData.sessionId,
+        sessionName: sessionData.sessionName,
+        sessionKey: sessionData.sessionKey,
+        whatsappAccountId: sessionData.wabaId,
+        token: accessToken,
+        phoneNumberId: responseHook?.phoneNumberId,
+        pin,
+        webhooks: sessionData.webhooks
+      };
+
+      return data;
+    } catch (error) {
+      logger.error(error);
+      return null;
+    }
   }
 
   async disconnect(phone) {
