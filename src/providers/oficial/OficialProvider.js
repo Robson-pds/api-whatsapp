@@ -18,22 +18,38 @@ class OficialProvider extends IWhatsAppProvider {
     this.webhooks = webhooks
 
     try {
-      const accessToken = await getAccessToken(sessionData.code);
+      const connectionFilePath = `data/connections/${phone}.json`
+
+      fs.mkdirSync('data/connections', { recursive: true })
+
+      let existingData = {}
+      if (fs.existsSync(connectionFilePath)) {
+        try {
+          existingData =
+            JSON.parse(fs.readFileSync(connectionFilePath, 'utf-8')) ?? {}
+        } catch {
+          existingData = {}
+        }
+      }
+
+      const sessionData = existingData
+
+      const accessToken = await getAccessToken(sessionData.code)
 
       if (!accessToken) {
-        logger.error("Erro ao obter token de acesso");
-        return null;
+        logger.error('Erro ao obter token de acesso')
+        return null
       }
 
       const responseHook = await enableSubscriptionsWebhook(
         sessionData.wabaId,
-        accessToken
-      );
+        accessToken,
+      )
 
       const pin = await registerPhoneNumber(
         responseHook?.phoneNumberId,
-        accessToken
-      );
+        accessToken,
+      )
 
       const data = {
         sessionId: sessionData.sessionId,
@@ -43,13 +59,24 @@ class OficialProvider extends IWhatsAppProvider {
         token: accessToken,
         phoneNumberId: responseHook?.phoneNumberId,
         pin,
-        webhooks: sessionData.webhooks
-      };
+        webhooks: sessionData.webhooks,
+      }
 
-      return data;
+      const mergedData = {
+        ...existingData,
+        ...data,
+        webhooks: {
+          ...(existingData.webhooks ?? {}),
+          ...(data.webhooks ?? {}),
+        },
+      }
+
+      fs.writeFileSync(connectionFilePath, JSON.stringify(mergedData))
+
+      return mergedData
     } catch (error) {
-      logger.error(error);
-      return null;
+      logger.error(error)
+      return null
     }
   }
 
@@ -79,16 +106,16 @@ class OficialProvider extends IWhatsAppProvider {
     return []
   }
 
-  async checkContact(number) {
+  async checkContact() {
     return true
   }
 
-  async getProfilePicture(number) {
+  async getProfilePicture() {
     return null
   }
 
-  async markAsRead(chatId) {
-    await markMessages(chatId, this.phone)
+  async markAsRead() {
+    throw new Error('Opção não suportada na API Oficial')
   }
 
   async getUnreadMessages() {
