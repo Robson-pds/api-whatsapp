@@ -64,4 +64,3 @@ const GetAllUnreadMessages = async (phone) => {
   return 0
 }
 module.exports = GetAllUnreadMessages
-

@@ -71,4 +71,3 @@ const prepareMediaMessageContent = async ({ media, body }) => {
 }
 
 module.exports = { prepareMediaMessageContent, processAudio }
-

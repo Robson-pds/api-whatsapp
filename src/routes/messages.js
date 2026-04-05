@@ -47,7 +47,8 @@ registry.registerPath({
       {
         name: 'channel',
         in: 'header',
-        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
+        description:
+          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
         schema: {
           type: 'string',
           enum: ['whaileys', 'oficial'],
@@ -103,7 +104,8 @@ registry.registerPath({
       {
         name: 'channel',
         in: 'header',
-        description: 'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header ou query)',
+        description:
+          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header ou query)',
         schema: {
           type: 'string',
           enum: ['whaileys', 'oficial'],

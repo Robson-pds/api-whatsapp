@@ -8,26 +8,26 @@ const VERSION = env.WABA_GRAPH_VERSION
 
 const getPhoneNumberId = async (wabaId, token) => {
   try {
-    const url = `${BASE_URL}/${VERSION}/${wabaId}/phone_numbers`;
+    const url = `${BASE_URL}/${VERSION}/${wabaId}/phone_numbers`
     const { data } = await axios.get(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
     if (!data.data[0]) {
-      logger.error("Erro ao obter ID do número de telefone");
-      return null;
+      logger.error('Erro ao obter ID do número de telefone')
+      return null
     }
 
-    const verifiedName = data.data[0].verified_name;
-    const displayPhoneNumber = data.data[0].display_phone_number;
-    logger.info(`WhatsApp ${verifiedName} - (${displayPhoneNumber}) conectado`);
+    const verifiedName = data.data[0].verified_name
+    const displayPhoneNumber = data.data[0].display_phone_number
+    logger.info(`WhatsApp ${verifiedName} - (${displayPhoneNumber}) conectado`)
 
-    return { phoneNumberId: data.data[0].id, displayPhoneNumber };
+    return { phoneNumberId: data.data[0].id, displayPhoneNumber }
   } catch (error) {
     if (error instanceof AxiosError) {
-      logger.error(error);
+      logger.error(error)
     }
   }
-};
+}
 
 module.exports = getPhoneNumberId
