@@ -1,10 +1,14 @@
 const IWhatsAppProvider = require('../../interfaces/IWhatsAppProvider.js')
 const fs = require('fs')
 const logger = require('../../utils/logger.js')
+const env = require('../../utils/Env.js')
 const sendMessage = require('./lib/helpers/sendMessage.js')
 const getAccessToken = require('./lib/helpers/getAccessToken.js')
 const enableSubscriptionsWebhook = require('./lib/helpers/enableSubscriptionsWebhook.js')
 const registerPhoneNumber = require('./lib/helpers/registerPhoneNumber.js')
+
+const BASE_URL = env.WABA_BASE_URL
+const VERSION = env.WABA_GRAPH_VERSION
 
 class OficialProvider extends IWhatsAppProvider {
   constructor() {
@@ -13,7 +17,7 @@ class OficialProvider extends IWhatsAppProvider {
     this.webhooks = {}
   }
 
-  async connect(phone, webhooks) {
+  async connect(phone, webhooks, code, wabaId) {
     this.phone = phone
     this.webhooks = webhooks
 
@@ -34,17 +38,14 @@ class OficialProvider extends IWhatsAppProvider {
 
       const sessionData = existingData
 
-      const accessToken = await getAccessToken(sessionData.code)
+      const accessToken = await getAccessToken(code)
 
       if (!accessToken) {
         logger.error('Erro ao obter token de acesso')
         return null
       }
 
-      const responseHook = await enableSubscriptionsWebhook(
-        sessionData.wabaId,
-        accessToken,
-      )
+      const responseHook = await enableSubscriptionsWebhook(wabaId, accessToken)
 
       const pin = await registerPhoneNumber(
         responseHook?.phoneNumberId,
@@ -52,10 +53,9 @@ class OficialProvider extends IWhatsAppProvider {
       )
 
       const data = {
-        sessionId: sessionData.sessionId,
-        sessionName: sessionData.sessionName,
+        sessionId: phone,
         sessionKey: sessionData.sessionKey,
-        whatsappAccountId: sessionData.wabaId,
+        whatsappAccountId: wabaId,
         token: accessToken,
         phoneNumberId: responseHook?.phoneNumberId,
         pin,
@@ -114,8 +114,26 @@ class OficialProvider extends IWhatsAppProvider {
     return null
   }
 
-  async markAsRead() {
-    throw new Error('Opção não suportada na API Oficial')
+  async markAsRead(messageId, sessionId) {
+    const data = {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: messageId
+    };
+
+    try {
+      const sessionData = await verifyToken(sessionId);
+      if (!sessionData) return;
+
+      const url = `${BASE_URL}/${VERSION}/${sessionData.phoneNumberId}/messages`;
+
+      await axios.post(url, data, {
+        headers: { Authorization: `Bearer ${sessionData.token}` }
+      });
+    } catch (error) {
+      const errorData = error.response?.data.error;
+      logger.error(errorData, "Erro ao marcar mensagem como lida.");
+    }
   }
 
   async getUnreadMessages() {
