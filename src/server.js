@@ -12,12 +12,28 @@ const {
 const providerManager = require('./providers/ProviderManager.js')
 
 process.on('uncaughtException', (err) => {
-  logger.error(`Uncaught Exception: ${err.message}`)
-  logger.error(err)
+  logger.error({
+    msg: 'Uncaught Exception',
+    error: {
+      message: err.message,
+      stack: err.stack,
+    },
+  })
+  process.exit(1)
 })
 
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  logger.error({
+    msg: 'Unhandled Rejection',
+    promise,
+    reason:
+      reason instanceof Error
+        ? {
+            message: reason.message,
+            stack: reason.stack,
+          }
+        : reason,
+  })
 })
 
 process.setMaxListeners(0)
@@ -105,21 +121,46 @@ async function restoreSessions() {
   }
 }
 
-function gracefulShutdown(signal) {
-  logger.info(`${signal} recebido. Fechando servidor HTTP...`)
+let shuttingDown = false
+
+async function gracefulShutdown(signal) {
+  if (shuttingDown) return
+  shuttingDown = true
+
+  logger.info(`\n==== SHUTDOWN INICIADO ====`)
+  logger.info(`Signal: ${signal}`)
+  logger.info(`PID: ${process.pid} | PPID: ${process.ppid}`)
+  logger.info(new Error('Stack trace do shutdown').stack)
+
+  server.getConnections((err, count) => {
+    logger.info(`Conexões abertas: ${count}`)
+  })
 
   server.close(async () => {
     logger.info('Servidor HTTP fechado.')
-    await stopWhisperServer()
+
+    try {
+      await stopWhisperServer()
+    } catch (e) {
+      logger.error('Erro ao parar Whisper:', e)
+    }
+
+    logger.info('Encerrado com sucesso.')
     process.exit(0)
   })
 
   setTimeout(async () => {
-    logger.error('Forçando encerramento.')
-    await stopWhisperServer()
+    logger.error('Timeout atingido. Forçando encerramento.')
+
+    try {
+      await stopWhisperServer()
+    } catch (e) {
+      logger.error('Erro ao parar Whisper (forçado):', e)
+    }
+
     process.exit(1)
   }, 10000)
 }
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
-process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+process.on('SIGTERM', gracefulShutdown)
+process.on('SIGINT', gracefulShutdown)

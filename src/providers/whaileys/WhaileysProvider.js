@@ -9,7 +9,6 @@ const {
   isJidBroadcast,
   isJidNewsletter,
   isJidGroup,
-  Boom,
 } = require('baileys')
 const P = require('pino')
 const { format } = require('date-fns')
@@ -40,10 +39,25 @@ class WhaileysProvider extends IWhatsAppProvider {
     this.sock = null
     this.phone = null
     this.retriesQrCodeMap = new Map()
+    this.isConnecting = false
   }
 
   async connect(phone, webhooks) {
+    if (this.isConnecting) return
+    this.isConnecting = true
+
     this.phone = phone
+
+    if (this.sock) {
+      try {
+        await this.sock.logout()
+      } catch {}
+      try {
+        await this.sock.ws.close()
+      } catch {}
+      this.sock = null
+    }
+
     let version
     if (env.WA_VERSION) {
       version = env.WA_VERSION
@@ -55,7 +69,6 @@ class WhaileysProvider extends IWhatsAppProvider {
     const sessionPath = `data/sessions/${phone}`
     const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
 
-    let retriesQrCode = 0
     const sock = makeWASocket({
       logger: loggerBaileys,
       linkPreviewImageThumbnailWidth: 150,
@@ -79,43 +92,48 @@ class WhaileysProvider extends IWhatsAppProvider {
       version,
       syncFullHistory: true,
       getMessage: async (key) => {
-        const msg = store.messages.get(key.id)
-        return msg
+        return store.messages.get(key.id)
       },
     })
 
     sock.phone = phone
 
+    baileysMessageListeners(sock, phone)
+
     sock.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect, qr, isOnline } = update
+      const { connection, lastDisconnect, qr } = update
 
       if (qr) {
         const retries = this.retriesQrCodeMap.get(phone) || 0
-        if (retries > 3) {
-          await sock.ws.close()
+
+        if (retries >= 3) {
+          try {
+            await sock.ws.close()
+          } catch {}
           this.retriesQrCodeMap.delete(phone)
           return
         }
-        this.retriesQrCodeMap.set(phone, (retriesQrCode += 1))
+
+        this.retriesQrCodeMap.set(phone, retries + 1)
         sock.qr = qr
       }
 
-      if (
-        connection === 'open' ||
-        update?.receivedPendingNotifications ||
-        isOnline
-      ) {
-        baileysMessageListeners(sock, phone)
-      }
-
       if (connection === 'close') {
-        const shouldReconnect =
-          lastDisconnect?.error instanceof Boom
-            ? lastDisconnect.error.output.statusCode !==
-              DisconnectReason.loggedOut
-            : true
+        const code = lastDisconnect?.error?.output?.statusCode
+
+        if (code === 403) {
+          await this.disconnect(phone)
+          return
+        }
+
+        const shouldReconnect = code !== DisconnectReason.loggedOut
+
         if (shouldReconnect) {
-          this.connect(phone, webhooks)
+          setTimeout(() => {
+            this.connect(phone, webhooks)
+          }, 2000)
+        } else {
+          await this.disconnect(phone)
         }
       }
     })
@@ -123,13 +141,18 @@ class WhaileysProvider extends IWhatsAppProvider {
     sock.ev.on('creds.update', saveCreds)
 
     this.sock = sock
-    return sock
+    this.isConnecting = false
   }
 
   async disconnect(phone) {
     if (this.sock) {
       try {
         await this.sock.logout()
+      } catch (error) {
+        logger.error(error)
+      }
+      try {
+        this.sock.ev.removeAllListeners('creds.update')
       } catch (error) {
         logger.error(error)
       }
@@ -143,7 +166,10 @@ class WhaileysProvider extends IWhatsAppProvider {
       } catch (error) {
         logger.error(error)
       }
+      this.sock = null
     }
+
+    this.isConnecting = false
 
     try {
       fs.rmSync(`data/connections/${phone}.json`, { force: true })
@@ -163,8 +189,7 @@ class WhaileysProvider extends IWhatsAppProvider {
   }
 
   async sendText(to, text) {
-    const content = { text }
-    return await sendMessage({ sock: this.sock, number: to, content })
+    return await sendMessage({ sock: this.sock, number: to, content: { text } })
   }
 
   async sendMedia(to, media) {
@@ -194,10 +219,7 @@ class WhaileysProvider extends IWhatsAppProvider {
       const contactsFiltered = contactsData.map((c) => {
         if (c.id === 'status@broadcast' || c.id.includes('g.us')) return false
         const number = c.id.split('@')[0]
-        return {
-          number,
-          name: c.name,
-        }
+        return { number, name: c.name }
       })
       contacts.push(...contactsFiltered)
     } catch (err) {
@@ -218,8 +240,7 @@ class WhaileysProvider extends IWhatsAppProvider {
 
   async getProfilePicture(number) {
     try {
-      const picture = await this.sock.profilePictureUrl(number)
-      return picture
+      return await this.sock.profilePictureUrl(number)
     } catch (err) {
       logger.error(err)
       return null
@@ -244,7 +265,7 @@ class WhaileysProvider extends IWhatsAppProvider {
     return await prepareMediaMessageContent({ media, body })
   }
 
-  async sendTemplate(to, template) {
+  async sendTemplate() {
     throw new Error('Templates not supported in whaileys provider')
   }
 }
