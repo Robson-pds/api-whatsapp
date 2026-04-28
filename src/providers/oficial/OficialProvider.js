@@ -1,14 +1,11 @@
 const IWhatsAppProvider = require('../../interfaces/IWhatsAppProvider.js')
 const fs = require('fs')
 const logger = require('../../utils/logger.js')
-const env = require('../../utils/Env.js')
 const sendMessage = require('./lib/helpers/sendMessage.js')
 const getAccessToken = require('./lib/helpers/getAccessToken.js')
 const enableSubscriptionsWebhook = require('./lib/helpers/enableSubscriptionsWebhook.js')
 const registerPhoneNumber = require('./lib/helpers/registerPhoneNumber.js')
-
-const BASE_URL = env.WABA_BASE_URL
-const VERSION = env.WABA_GRAPH_VERSION
+const markMessages = require('./lib/helpers/readMessage.js')
 
 class OficialProvider extends IWhatsAppProvider {
   constructor() {
@@ -114,26 +111,8 @@ class OficialProvider extends IWhatsAppProvider {
     return null
   }
 
-  async markAsRead(messageId, sessionId) {
-    const data = {
-      messaging_product: "whatsapp",
-      status: "read",
-      message_id: messageId
-    };
-
-    try {
-      const sessionData = await verifyToken(sessionId);
-      if (!sessionData) return;
-
-      const url = `${BASE_URL}/${VERSION}/${sessionData.phoneNumberId}/messages`;
-
-      await axios.post(url, data, {
-        headers: { Authorization: `Bearer ${sessionData.token}` }
-      });
-    } catch (error) {
-      const errorData = error.response?.data.error;
-      logger.error(errorData, "Erro ao marcar mensagem como lida.");
-    }
+  async markAsRead(messageId) {
+    return await markMessages(messageId, this.phone)
   }
 
   async getUnreadMessages() {
