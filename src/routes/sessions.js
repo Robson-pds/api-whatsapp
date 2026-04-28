@@ -10,6 +10,41 @@ const { responseMessageSchema } = require('../schemas/docs/responseMessage')
 
 const sessionRoutes = Router()
 
+const channelParameters = [
+  {
+    name: 'channel',
+    in: 'header',
+    description:
+      'Provedor WhatsApp (padrão: whaileys). Aceita também header x-channel, query channel e (em POST) body.channel.',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'x-channel',
+    in: 'header',
+    description:
+      'Alias para o header channel. Provedor WhatsApp (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'channel',
+    in: 'query',
+    description: 'Provedor WhatsApp via querystring (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+]
+
 sessionRoutes.get('/', isAuth, SessionController.index)
 
 registry.registerPath({
@@ -67,8 +102,18 @@ registry.registerPath({
             }),
             channel: z.enum(['whaileys', 'oficial']).openapi({
               description:
-                'Provedor WhatsApp: whaileys (Baileys/Não-oficial) ou oficial (WABA/API Oficial)',
+                'Provedor WhatsApp: whaileys (Baileys/Não-oficial) ou oficial (WABA/API Oficial). Observação: o channel=oficial exige onboarding (OAuth/Meta) e configuração prévia no WABA.',
               example: 'whaileys',
+            }),
+            code: z.string().optional().openapi({
+              description:
+                'Meta OAuth authorization code (obrigatório para o onboarding do channel=oficial).',
+              example: 'AQAB...',
+            }),
+            wabaId: z.string().optional().openapi({
+              description:
+                'WhatsApp Business Account ID (obrigatório para o onboarding do channel=oficial).',
+              example: '123456789012345',
             }),
             webhooks: z
               .object({
@@ -148,19 +193,7 @@ registry.registerPath({
         },
       },
     },
-    parameters: [
-      {
-        name: 'channel',
-        in: 'header',
-        description:
-          'Provedor WhatsApp: whaileys ou oficial (opcional, pode estar em header, query ou body)',
-        schema: {
-          type: 'string',
-          enum: ['whaileys', 'oficial'],
-          example: 'whaileys',
-        },
-      },
-    ],
+    parameters: channelParameters,
   },
   responses: {
     200: {

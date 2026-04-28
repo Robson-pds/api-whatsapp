@@ -10,6 +10,41 @@ const { z } = require('../lib/zod.js')
 
 const chatsRoutes = express.Router()
 
+const channelParameters = [
+  {
+    name: 'channel',
+    in: 'header',
+    description:
+      'Provedor WhatsApp (padrão: whaileys). Aceita também header x-channel, query channel e (em POST) body.channel.',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'x-channel',
+    in: 'header',
+    description:
+      'Alias para o header channel. Provedor WhatsApp (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'channel',
+    in: 'query',
+    description: 'Provedor WhatsApp via querystring (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+]
+
 chatsRoutes.post(
   '/:phone/read',
   isAuth,
@@ -34,19 +69,7 @@ registry.registerPath({
         },
       },
     },
-    parameters: [
-      {
-        name: 'channel',
-        in: 'header',
-        description:
-          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
-        schema: {
-          type: 'string',
-          enum: ['whaileys', 'oficial'],
-          example: 'whaileys',
-        },
-      },
-    ],
+    parameters: channelParameters,
   },
   responses: {
     200: {

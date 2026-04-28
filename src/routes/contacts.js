@@ -9,10 +9,44 @@ const { z } = require('../lib/zod.js')
 const { responseMessageSchema } = require('../schemas/docs/responseMessage')
 const {
   responseContactSchema,
-  contactSchemas,
 } = require('../schemas/docs/responseContactSchemas')
 
 const contactsRoutes = express.Router()
+
+const channelParameters = [
+  {
+    name: 'channel',
+    in: 'header',
+    description:
+      'Provedor WhatsApp (padrão: whaileys). Aceita também header x-channel, query channel e (em POST) body.channel.',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'x-channel',
+    in: 'header',
+    description:
+      'Alias para o header channel. Provedor WhatsApp (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+  {
+    name: 'channel',
+    in: 'query',
+    description: 'Provedor WhatsApp via querystring (padrão: whaileys).',
+    schema: {
+      type: 'string',
+      enum: ['whaileys', 'oficial'],
+      example: 'whaileys',
+    },
+  },
+]
 
 contactsRoutes.get(
   '/:phone/list',
@@ -30,23 +64,12 @@ registry.registerPath({
     params: z.object({
       phone: z.string().openapi({ example: '5599999999999' }),
     }),
-    parameters: [
-      {
-        name: 'channel',
-        in: 'header',
-        description:
-          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header ou query)',
-        schema: {
-          type: 'string',
-          enum: ['whaileys', 'oficial'],
-          example: 'whaileys',
-        },
-      },
-    ],
+    parameters: channelParameters,
   },
   responses: {
     200: {
-      description: 'Lista de contatos',
+      description:
+        'Lista de contatos. Observação: no channel=oficial a API retorna uma lista vazia ([]).',
       content: {
         'application/json': {
           schema: z.array(responseContactSchema),
@@ -90,25 +113,20 @@ registry.registerPath({
         },
       },
     },
-    parameters: [
-      {
-        name: 'channel',
-        in: 'header',
-        description:
-          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
-        schema: {
-          type: 'string',
-          enum: ['whaileys', 'oficial'],
-          example: 'whaileys',
-        },
-      },
-    ],
+    parameters: channelParameters,
   },
   responses: {
     200: {
-      description: 'Contato verificado com sucesso',
+      description:
+        'Contato verificado com sucesso. Observação: no channel=oficial a API atualmente sempre retorna valid=true.',
       content: {
-        'application/json': { schema: contactSchemas },
+        'application/json': {
+          schema: z
+            .object({
+              valid: z.boolean().openapi({ example: true }),
+            })
+            .openapi({ example: { valid: true } }),
+        },
       },
     },
     400: {
@@ -149,28 +167,18 @@ registry.registerPath({
         },
       },
     },
-    parameters: [
-      {
-        name: 'channel',
-        in: 'header',
-        description:
-          'Provedor WhatsApp: whaileys ou oficial (opcional, padrão: whaileys, pode estar em header, query ou body)',
-        schema: {
-          type: 'string',
-          enum: ['whaileys', 'oficial'],
-          example: 'whaileys',
-        },
-      },
-    ],
+    parameters: channelParameters,
   },
   responses: {
     200: {
-      description: 'Foto de perfil obtida com sucesso',
+      description:
+        'Foto de perfil obtida com sucesso. Observação: no channel=oficial a API pode retornar picture=null.',
       content: {
         'application/json': {
           schema: z.object({
             picture: z
               .string()
+              .nullable()
               .openapi({ example: 'https://example.com/picture.jpg' }),
           }),
         },
